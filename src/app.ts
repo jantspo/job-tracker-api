@@ -1,7 +1,6 @@
 import express, { type Request, type Response, type NextFunction } from "express";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
-import { requireUser } from "./middleware/requireUser.js";
 
 export function createApp() {
   const app = express();
