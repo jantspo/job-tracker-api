@@ -36,5 +36,5 @@ ListSource.init(
     updatedAt: DataTypes.DATE,
     name: { type: DataTypes.STRING, allowNull: false, unique: true },
   },
-  { sequelize, tableName: "listSources" },
+  { sequelize, tableName: "list_sources" },
 );

@@ -2,7 +2,7 @@ import { DataTypes, Sequelize } from "sequelize";
 import type { Migration } from "../migrate.js";
 
 export const up: Migration = async ({ context: qi }) => {
-  await qi.createTable("listSources", {
+  await qi.createTable("list_sources", {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true, allowNull: false },
     name: { type: DataTypes.STRING, allowNull: false, unique: true },
     createdAt: { type: DataTypes.DATE, allowNull: false, defaultValue: Sequelize.fn("now") },
@@ -11,5 +11,5 @@ export const up: Migration = async ({ context: qi }) => {
 };
 
 export const down: Migration = async ({ context: qi }) => {
-  await qi.dropTable("listSources");
+  await qi.dropTable("list_sources");
 };
