@@ -31,7 +31,7 @@ export const up: Migration = async ({ context: qi }) => {
         listSourceId: {
           type: DataTypes.INTEGER,
           allowNull: false,
-          references: { model: "listSources", key: "id" },
+          references: { model: "list_sources", key: "id" },
           onUpdate: "CASCADE",
           onDelete: "RESTRICT",
         },
