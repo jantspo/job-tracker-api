@@ -58,5 +58,20 @@ User.init(
     createdAt: DataTypes.DATE,
     updatedAt: DataTypes.DATE,
   },
-  { sequelize, tableName: "users" },
+  {
+    defaultScope: {
+      attributes: {
+        exclude: ["passwordHash"],
+      },
+    },
+    sequelize,
+    scopes: {
+      withPassword: {
+        attributes: {
+          include: ["passwordHash"],
+        },
+      },
+    },
+    tableName: "users",
+  },
 );
