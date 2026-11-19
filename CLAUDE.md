@@ -24,9 +24,10 @@ Before considering a change done, run `npm run typecheck && npm run lint && npm 
 
 ### Auth (mocked — demo app)
 
-- `/api/auth` (`authRouter`, `src/routes/auth.ts`) is public; `POST /login` is meant to look up a user by email and return `{ user, token }` or 401 (currently a stub).
+- `/api/auth` (`authRouter`, `src/routes/auth.ts`) is public; `POST /login` takes `{ email }`, validates and normalizes it (trim + lowercase, 400 if missing/non-string/malformed), and returns `{ user: { id, email, createdAt }, token }` or 401 `Invalid credentials`. No password check (demo).
 - `requireUser` (`src/middleware/requireUser.ts`) expects `Authorization: Bearer <userId>`, loads the `User` into `res.locals.user` (typed via a global `Express.Locals` augmentation), and responds 401 otherwise. It is never applied globally: attach it per router at mount time in `createApp()` (`app.use("/api/listings", requireUser, listingsRouter)`), keeping public routes (health, auth) unwrapped. Handlers behind it can use `res.locals.user!`.
-- Token = user id is deliberate mock auth; swap the token parsing for real verification later without changing callers.
+- Token = user id is deliberate mock auth. `src/auth/token.ts` owns it: `issueToken(user)` and `verifyToken(token)` (positive integer id or `null`). Swap those for real verification (e.g. JWT) later without changing callers. `requireUser` still parses the header with its own regex and should move to `verifyToken`.
+- `User`'s `defaultScope` excludes `passwordHash`; use `User.scope("withPassword")` when the hash is needed (e.g. a future password check). Never return a raw `User` from an endpoint; pick the public fields.
 
 ### Database
 
@@ -46,6 +47,12 @@ Before considering a change done, run `npm run typecheck && npm run lint && npm 
 - **`unit`** — `src/**/*.test.ts` excluding `*.db.test.ts`. `DATABASE_URL` is a placeholder (Sequelize doesn't connect until a query runs). Stub model statics with `vi.spyOn(User, "findByPk")` and restore in `afterEach`; never let a unit test reach the database. Middleware can be tested by mounting it on a throwaway `express()` app.
 - **`db`** — `src/**/*.db.test.ts` against a real Postgres at `TEST_DATABASE_URL` (separate `*_test` database, e.g. `job_tracker_test`). `src/__tests__/db/globalSetup.ts` refuses non-`_test` URLs, then runs all migrations once; `src/__tests__/db/setup.ts` `TRUNCATE`s every app table (`RESTART IDENTITY CASCADE`, not `SequelizeMeta`) before each test and closes the connection after. Add new tables to that `TRUNCATE` list. Files run serially because they share one database.
 - To reset the test DB after editing migrations: `dropdb job_tracker_test && createdb job_tracker_test`.
+
+## Claude Code setup (`.claude/`)
+
+- Hooks (`.claude/settings.json` → `.claude/hooks/*.sh`, need `jq`): Prettier + ESLint on every edited file (lint errors are fed back), `tsc --noEmit` on Stop when `.ts` files changed, repo state injected at SessionStart, and `protect-files.sh` blocking `.env`/key files. Set `LOCK_MIGRATIONS=true` in `protect-files.sh` once a shared DB has run the migrations.
+- Skills: `/new-migration`, `/new-model`, `/new-route`, `/write-tests`, `/api-docs` (`.claude/skills/`).
+- Personal overrides go in `.claude/settings.local.json` (gitignored).
 
 ## Conventions and gotchas
 
