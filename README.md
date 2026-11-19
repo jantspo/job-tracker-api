@@ -1,6 +1,6 @@
-# portfolio-node-server
+# job-tracker-api
 
-Express 5 + TypeScript API server for the portfolio site.
+Express 5 + TypeScript API for tracking job listings, how well they fit your resume, and where each application stands.
 
 ## Getting started
 
