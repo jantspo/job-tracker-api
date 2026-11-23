@@ -24,5 +24,5 @@ authRouter.post("/login", validate({ body: loginBody }), async (_req, res) => {
   }
 
   const { id, email, createdAt } = user;
-  res.json({ user: { id, email, createdAt }, token: issueToken(user) });
+  res.json({ user: { id, email, createdAt }, token: await issueToken(user) });
 });
