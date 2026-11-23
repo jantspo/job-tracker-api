@@ -2,7 +2,13 @@ import { Umzug, SequelizeStorage } from "umzug";
 import { sequelize } from "./sequelize.js";
 
 export const migrator = new Umzug({
-  migrations: { glob: ["migrations/*.{ts,js}", { cwd: import.meta.dirname }] },
+  migrations: {
+    glob: ["migrations/*.{ts,js}", { cwd: import.meta.dirname }],
+    resolve: (params) => ({
+      ...Umzug.defaultResolver(params),
+      name: params.name.replace(/\.(ts|js)$/, ""),
+    }),
+  },
   context: sequelize.getQueryInterface(),
   storage: new SequelizeStorage({ sequelize }),
   logger: console,

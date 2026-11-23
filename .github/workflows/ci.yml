@@ -29,3 +29,15 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run test:run
+      - run: npm run build
+      - name: Smoke test the built server
+        env:
+          DATABASE_URL: postgres://postgres:postgres@localhost:5432/job_tracker_test
+          PORT: 4000
+        run: |
+          node dist/db/migrate.js up
+          node dist/server.js &
+          for i in $(seq 1 20); do curl -sf localhost:4000/api/health && break; sleep 0.5; done
+          curl -sf localhost:4000/api/health
+          test "$(curl -s -o /dev/null -w '%{http_code}' -X POST localhost:4000/api/auth/login \
+            -H 'content-type: application/json' -d '{"email":')" = 400
