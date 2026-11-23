@@ -1,31 +1,13 @@
 import { Router } from "express";
 import { User } from "../models/index.js";
 import { issueToken } from "../auth/token.js";
+import { validate } from "../middleware/validate.js";
+import { loginBody, type LoginBody } from "../schemas/auth.js";
 
 export const authRouter = Router();
 
-const emailRegex =
-  /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
-
-authRouter.post("/login", async (req, res) => {
-  const { email: reqEmail } = (req.body ?? {}) as { email?: unknown };
-
-  if (!reqEmail) {
-    res.status(400).json({ error: "Invalid or missing email" });
-    return;
-  }
-
-  if (typeof reqEmail !== "string") {
-    res.status(400).json({ error: "Invalid email" });
-    return;
-  }
-
-  const normalizedEmail = reqEmail.trim().toLowerCase();
-
-  if (!emailRegex.test(normalizedEmail)) {
-    res.status(400).json({ error: "Invalid email" });
-    return;
-  }
+authRouter.post("/login", validate({ body: loginBody }), async (_req, res) => {
+  const { email: normalizedEmail } = res.locals.body as LoginBody;
 
   // In a real world scenario this would include a password check, so we'd have to add
   // password to the scope
@@ -42,7 +24,5 @@ authRouter.post("/login", async (req, res) => {
   }
 
   const { id, email, createdAt } = user;
-  const publicUser = { id, email, createdAt };
-
-  res.json({ user: publicUser, token: issueToken(user) });
+  res.json({ user: { id, email, createdAt }, token: issueToken(user) });
 });

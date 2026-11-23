@@ -42,6 +42,14 @@ describe("POST /api/auth/login", () => {
       expect(res.body).toEqual({ error: "Invalid or missing email" });
     });
 
+    it("400s as missing when email is null", async () => {
+      const findOne = vi.spyOn(User, "findOne");
+      const res = await login({ email: null });
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "Invalid or missing email" });
+      expect(findOne).not.toHaveBeenCalled();
+    });
+
     it("400s when email is an empty string", async () => {
       const res = await login({ email: "" });
       expect(res.status).toBe(400);
@@ -52,6 +60,8 @@ describe("POST /api/auth/login", () => {
       ["a number", 12345],
       ["an object", { not: "an email" }],
       ["a boolean", true],
+      ["zero", 0],
+      ["false", false],
     ])("400s when email is %s", async (_label, email) => {
       const findOne = vi.spyOn(User, "findOne");
       const res = await login({ email });
@@ -78,6 +88,25 @@ describe("POST /api/auth/login", () => {
         expect(findOne).not.toHaveBeenCalled();
       },
     );
+
+    // Well-formed addresses built from 60-char domain labels, so only the length limit applies.
+    const label = "b".repeat(60);
+
+    it("400s for an email longer than 254 characters without querying", async () => {
+      const findOne = vi.spyOn(User, "findOne");
+      const email = `${"a".repeat(60)}@${[label, label, label, label].join(".")}.com`; // 308 chars
+      const res = await login({ email });
+      expect(res.status).toBe(400);
+      expect(res.body).toEqual({ error: "Invalid email" });
+      expect(findOne).not.toHaveBeenCalled();
+    });
+
+    it("measures the length after trimming surrounding whitespace", async () => {
+      vi.spyOn(User, "findOne").mockResolvedValue(fakeUser());
+      const email = `${"a".repeat(50)}@${[label, label, label].join(".")}.com`; // 237 chars
+      const res = await login({ email: `${" ".repeat(30)}${email}` }); // 267 before trimming
+      expect(res.status).toBe(200);
+    });
   });
 
   describe("credentials", () => {

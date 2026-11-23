@@ -23,7 +23,9 @@ export const <name>Router = Router();
 
 - Export a named `<name>Router`. Relative imports end in `.js`; type-only imports use inline `type`.
 - Express 5 forwards rejected promises to the error handler, so async handlers need no try/catch for unexpected errors. Do handle **expected** failures explicitly: `400` for bad input, `404` for missing or not-owned rows, with `{ error: string }` bodies.
-- Validate and parse params and body yourself (`Number(req.params.id)`, check `Number.isInteger`). Model `validate` errors (`ValidationError`) should become 400, not 500.
+- Validate input with Zod: define schemas in `src/schemas/<name>.ts` and mount `validate({ params, query, body })` per route. Read parsed values from `res.locals.body` / `res.locals.params` / `res.locals.query` (cast with `as z.infer<typeof schema>`), never from `req`. For ids: `z.object({ id: z.coerce.number({ error: "Invalid id" }).int("Invalid id").positive("Invalid id") })`. Put the message on `z.coerce.number()` too: `"abc"` coerces to `NaN`, which fails the type check, not `.positive()`.
+- Reuse allowed values from the models (`z.enum(WORK_MODES)`) rather than copying the arrays.
+- `errorHandler` already maps JSON parse errors and Sequelize `ValidationError` to 400 and `UniqueConstraintError` to 409, so don't catch those in handlers. To send another 4xx from deep code, throw an error with an integer `status` (and `expose: true` if its message is safe to show).
 - Scope every query to `res.locals.user!.id` on protected routes; never return another user's rows.
 - For user-specific listing data, query `UserListing` with `include` (the primary read path), not `Listing` alone.
 
@@ -38,7 +40,7 @@ export const <name>Router = Router();
 
 - **Unit** (`src/__tests__/<name>.test.ts`): drive `createApp()` with Supertest. Stub model statics with `vi.spyOn(Model, "findAll")` and similar, and add `afterEach(() => vi.restoreAllMocks())`. For protected routes, also stub `User.findByPk` so `requireUser` passes with `Authorization: Bearer 1`, and assert 401 without it. A unit test must never reach the DB.
 - **DB** (`src/__tests__/<name>.db.test.ts`), for real query behavior: seed rows, hit the endpoint, and assert on the response, including that other users' data is excluded.
-- Cover the happy path, 400, 404, 401 (if protected), and the response shape.
+- Cover the happy path, 400, 404, 401 (if protected), and the response shape. Cover each schema's rejection paths through the route (missing, wrong type, out of range), asserting the exact `{ error }` body, and check that transformed values (trimmed, coerced) reach the query.
 
 ## 4. Finish
 
