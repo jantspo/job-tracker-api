@@ -34,7 +34,9 @@ Prefer unit tests; use db tests when the behavior _is_ the database.
 - One behavior per `it`, named as the behavior ("401s when the user doesn't exist").
 - Cover the happy path, each error branch, and edge cases (null and optional fields, boundaries like `salaryMin === salaryMax`).
 - Assert exact bodies for errors (`toEqual({ error: "..." })`).
-- Don't test Sequelize or Express themselves; test this app's code.
+- Don't test Sequelize, Express or Zod themselves; test this app's code.
+- Test request schemas through the route that uses them, not in isolation, unless the schema is shared (e.g. job-board parsing). Cover missing, wrong-type and transformed inputs (trim, lowercase, coerce).
+- Compare objects with `toEqual` (which fails on extra keys), not by `Object.keys` order.
 
 ## 5. Run
 

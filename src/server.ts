@@ -1,7 +1,8 @@
 import { createApp } from "./app.js";
 import { sequelize } from "./db/sequelize.js";
+import { env } from "./env.js";
 
-const PORT = Number(process.env.PORT) || 4000;
+const PORT = env.PORT;
 
 async function main() {
   await sequelize.authenticate();

@@ -1,6 +1,7 @@
-import express, { type Request, type Response, type NextFunction } from "express";
+import express, { type Request, type Response } from "express";
 import { healthRouter } from "./routes/health.js";
 import { authRouter } from "./routes/auth.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 export function createApp() {
   const app = express();
@@ -20,11 +21,7 @@ export function createApp() {
     res.status(404).json({ error: "Not found" });
   });
 
-  // Error handler
-  app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
-    console.error(err);
-    res.status(500).json({ error: "Internal server error" });
-  });
+  app.use(errorHandler);
 
   return app;
 }
