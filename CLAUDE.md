@@ -13,7 +13,7 @@ Express 5 + TypeScript API for tracking job listings, resume fit, and applicatio
 - `npm run typecheck`, `npm run lint` (`lint:fix`), `npm run format:check` (`format`)
 - `npm run db:migrate` / `db:rollback` (one step; `npm run db:rollback -- --to 0` for all) / `db:status` (pending) — Umzug CLI via `src/db/migrate.ts`; needs `DATABASE_URL`
 
-Before considering a change done, run `npm run typecheck && npm run lint && npm run format:check && npm run test:run`. The same checks run in a husky pre-push hook (`.husky/pre-push`, installed by `npm install` via `prepare`) and in GitHub Actions (`.github/workflows/ci.yml`) on every push and PR. The `db` test project needs a reachable Postgres at `TEST_DATABASE_URL`: locally that's your own server (so pushing requires it running); CI provides a `postgres` service container.
+Before considering a change done, run `npm run typecheck && npm run lint && npm run format:check && npm run test:run`. The same checks run in a husky pre-push hook (`.husky/pre-push`, installed by `npm install` via `prepare`) and in GitHub Actions (`.github/workflows/ci.yml`) on every push and PR. CI then also runs `npm run build` and a smoke test of the built app: it migrates with `dist/db/migrate.js`, starts `dist/server.js`, and checks `/api/health` plus a 400 for malformed JSON on `/login`. Keep that step passing when changing the build, `server.ts`, env vars or startup. The `db` test project needs a reachable Postgres at `TEST_DATABASE_URL`: locally that's your own server (so pushing requires it running); CI provides a `postgres` service container.
 
 ## Architecture
 
