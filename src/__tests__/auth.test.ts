@@ -161,7 +161,8 @@ describe("POST /api/auth/login", () => {
       vi.spyOn(User, "findOne").mockResolvedValue(fakeUser());
       const res = await login({ email: "jane@example.com" });
       const { token } = res.body as { token: string };
-      expect(verifyToken(token)).toBe(7);
+      expect(token).not.toBe("7"); // a signed JWT, not the old bare-id mock token
+      expect(await verifyToken(token)).toBe(7);
     });
   });
 });
